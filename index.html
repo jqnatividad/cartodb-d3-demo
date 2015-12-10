@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/3.15/themes/css/cartodb.css" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.1/nv.d3.min.css">
+
     <link rel="icon" type="image/png" href="./favicon.png">
   </head>
 
@@ -33,6 +35,16 @@
       height: 100%;
     }
 
+    #chart {
+      width: 300px;
+      background: #F2F2F2;
+      position: absolute;
+      top: 60px;
+      right: 10px;
+      border-radius: 10px;
+      border: 1px solid #757575;
+    }
+
   </style>
 
   <body>
@@ -46,7 +58,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#">CartoDB Bootstrap Template</a>
+          <a class="navbar-brand" href="#">CartoDB NVD3 Demo</a>
         </div>
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
@@ -63,23 +75,29 @@
       <div id="map">
       </div>
 
+      <div id="chart" class='col-md-12'>
+        <svg></svg>
+      </div>
+
     </div><!-- /.container -->
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src="http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.10/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.1/nv.d3.min.js"></script>
     <script>
 
     var map = new L.Map('map', { 
-      center: [40.1,-100.3],
-      zoom: 4
+      center: [40.693362,-73.983972],
+      zoom: 15
     });
 
     L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',{
       attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
     }).addTo(map);
 
-    var layerUrl = 'http://documentation.cartodb.com/api/v2/viz/236085de-ea08-11e2-958c-5404a6a683d5/viz.json';
+    var layerUrl = 'https://team.cartodb.com/u/chriswhong/api/v2/viz/9c86edec-9f49-11e5-ba87-0e5db1731f59/viz.json';
 
     cartodb.createLayer(map, layerUrl)
       .addTo(map)
@@ -87,6 +105,39 @@
 
       }).on('error', function() {
         //log the error
+      });
+
+    var sql = new cartodb.SQL({ user: 'chriswhong' })
+    sql.execute("SELECT complaint_type as label, count(*) as value FROM chriswhong.table_12 GROUP BY complaint_type ORDER BY value DESC LIMIT 10")
+      .done(function(data) {
+        console.log(data.rows);
+        var chartData = [
+          {
+            key: "My Chart",
+            values: data.rows
+          }
+        ]
+
+        nv.addGraph(function() {
+          var chart = nv.models.discreteBarChart()
+              .x(function(d) { return d.label })    //Specify the data accessors.
+              .y(function(d) { return d.value })
+              .tooltips(true)        
+              .showValues(false)      
+              ;
+
+          chart.xAxis.rotateLabels(-45)
+
+          d3.select('#chart svg')
+              .datum(chartData)
+              .call(chart)
+              .attr('style','height:260px')
+              ;
+
+          nv.utils.windowResize(chart.update);
+
+          return chart;
+        });
       });
 
     </script>

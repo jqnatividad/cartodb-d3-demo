@@ -1,0 +1,11 @@
+SQL:  
+
+--Get count of top 10 complaint types
+SELECT complaint_type, count(*) 
+FROM chriswhong.table_12 
+GROUP BY complaint_type 
+ORDER BY count DESC LIMIT 10
+
+
+SELECT * FROM chriswhong.table_12 
+WHERE complaint_type IN ('Noise','Illegal Parking','Street Condition','HEAT/HOT WATER','Broken Muni Meter','Street Light Condition','For Hire Vehicle Complaint','Noise - Street/Sidewalk')
